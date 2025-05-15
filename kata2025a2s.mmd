@@ -1,0 +1,29 @@
+graph TD
+    App -->|OAuth2 Flow| CF
+    CF --> Auth3/AuthPJ
+    Auth3/AuthPJ --> AccessToken
+    AccessToken -->|Callback Code| App
+    App -->|Access Token Request| AccessToken
+    App -->|Refresh Token Request| AccessToken
+    AccessToken -->| Get/Record authorization | DynamoDB
+
+    App -->|Send PISP/AISP Request| Adapter
+    Adapter -->|Send Transaction identifier| App
+    Adapter -->|Init transaction| SF_Transaction
+    SF_Transaction -->|Start| Token
+    Token -->|Validate Token| AccessToken
+    Token -->|Failed Token| EventBus
+    Token -->|Success Token| BuildTransaction
+    BuildTransaction -->|Send transaction| EventBus
+
+    EventBus -->|Transaction Data| SF_AISP/BDB
+    EventBus -->|Transaction OnUs| SF_OnUs
+    EventBus -->|Transaction Aval| SF_InterAval
+    EventBus -->|Transaction ACH| SF_ACH
+    SF_ACH -->|Transaction ACH| Notification
+    SF_OnUs -->|Transaction ACH| Notification
+    SF_InterAval -->|Transaction ACH| Notification
+    SF_AISP/BDB -->|Transaction ACH| Notification
+    SF_AISP/BDB -->|Transaction ACH| DynamoDB
+    EventBus -->|Notification Channel| Notification
+    App -->| Subscribe| Notification
